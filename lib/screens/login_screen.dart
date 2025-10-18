@@ -1,52 +1,94 @@
 import 'package:flutter/material.dart';
-import 'admin_dashboard.dart';
-import 'student_dashboard.dart';
+import 'dart:convert'; // For jsonDecode
+import 'package:http/http.dart' as http; // For making HTTP requests
+import 'admin_dashboard.dart'; // Import the real AdminDashboard
+import 'student_dashboard.dart'; // Import the real StudentDashboard
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
-  String _role = 'student'; // default
+  final TextEditingController _passwordController = TextEditingController();
+  String _selectedRole = 'student'; // default role
+  bool _isLoading = false;
 
-  void _login() {
+  // PHP backend URL
+  final String baseUrl =
+      "http://10.159.50.69/exam_automation/login.php"; // replace with your server IP if needed
+
+  Future<void> loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final id = _idController.text.trim();
-    if (id.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter your ${_role == 'student' ? 'Register / Admission Number' : 'Admin ID'}',
-          ),
-        ),
-      );
+    final password = _passwordController.text.trim();
+    final role = _selectedRole;
+
+    if (id.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please enter ID and password')));
+      setState(() => _isLoading = false);
       return;
     }
 
-    if (_role == 'admin') {
-      // For simplicity, using a hardcoded admin ID.
-      // In a real app, this should be a secure authentication check.
-      if (id == 'admin') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminDashboard()),
-        );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid Admin ID')));
-      }
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => StudentDashboard(registerNumber: id),
-        ),
+    try {
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        body: {'id': id, 'password': password, 'role': role},
       );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Login Successful!')));
+
+          // Navigate based on role
+          if (role == 'admin') {
+            // The existing AdminDashboard doesn't take data, so we just navigate.
+            // You can modify AdminDashboard later to use the logged-in admin's data.
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            );
+          } else {
+            // The existing StudentDashboard expects a registerNumber.
+            // We'll pass the student's ID from the successful login.
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StudentDashboard(registerNumber: id),
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(data['message'])));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Server Error: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -54,33 +96,65 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Exam Automation Login')),
       body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButton<String>(
-                value: _role,
-                items: const [
-                  DropdownMenuItem(value: 'student', child: Text('Student')),
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                ],
-                onChanged: (value) => setState(() => _role = value!),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _idController,
-                decoration: InputDecoration(
-                  labelText: _role == 'student'
-                      ? 'Register / Admission Number'
-                      : 'Admin ID',
-                  border: const OutlineInputBorder(),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Role selection
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              items: [
+                const DropdownMenuItem(
+                  value: 'student',
+                  child: Text('Student'),
                 ),
+                const DropdownMenuItem(value: 'admin', child: Text('Admin')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedRole = value!;
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Select Role',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(onPressed: _login, child: const Text('Login')),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+
+            // ID input
+            TextField(
+              controller: _idController,
+              decoration: InputDecoration(
+                labelText: _selectedRole == 'student'
+                    ? 'Register / Admission / Username'
+                    : 'Username',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Password input
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Login button
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: loginUser,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: const Text('Login'),
+                  ),
+          ],
         ),
       ),
     );

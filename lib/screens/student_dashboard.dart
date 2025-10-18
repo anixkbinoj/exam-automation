@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/excel_service.dart';
 import '../models/student.dart';
+import '../services/excel_service.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String registerNumber;
@@ -16,6 +16,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   void initState() {
     super.initState();
+    // Find the student details from the Excel data using the register number.
     student = ExcelService.findStudent(widget.registerNumber);
   }
 
@@ -24,7 +25,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return Scaffold(
       appBar: AppBar(title: const Text('Student Dashboard')),
       body: Center(
-        child: student!.registerNumber.isEmpty
+        child: student == null || student!.registerNumber.isEmpty
             ? const Text('Record not found. Please check your number.')
             : Card(
                 margin: const EdgeInsets.all(20),
@@ -33,15 +34,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Name: ${student!.name}',
                         style: const TextStyle(fontSize: 18),
                       ),
+                      const SizedBox(height: 8),
                       Text(
                         'Class: ${student!.className}',
                         style: const TextStyle(fontSize: 18),
                       ),
+                      const SizedBox(height: 8),
                       Text(
                         'Room: ${student!.roomNumber}',
                         style: const TextStyle(fontSize: 18),
