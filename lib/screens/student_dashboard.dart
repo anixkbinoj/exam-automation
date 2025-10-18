@@ -24,7 +24,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return Scaffold(
       appBar: AppBar(title: const Text('Student Dashboard')),
       body: Center(
-        child: student == null || student!.registerNumber.isEmpty
+        child: student!.registerNumber.isEmpty
             ? const Text('Record not found. Please check your number.')
             : Card(
                 margin: const EdgeInsets.all(20),

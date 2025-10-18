@@ -6,7 +6,7 @@ class ExcelService {
   static List<Student> students = [];
 
   static Future<void> readAndStoreExcel(String filePath) async {
-    var bytes = File(filePath).readAsBytesSync();
+    var bytes = await File(filePath).readAsBytes();
     var excel = Excel.decodeBytes(bytes);
 
     students.clear();
@@ -25,14 +25,10 @@ class ExcelService {
     }
   }
 
-  static Student? findStudent(String registerNumber) {
-    try {
-      return students.firstWhere(
-        (s) => s.registerNumber == registerNumber,
-        orElse: () => Student.empty(),
-      );
-    } catch (e) {
-      return null;
-    }
+  static Student findStudent(String registerNumber) {
+    return students.firstWhere(
+      (s) => s.registerNumber == registerNumber,
+      orElse: () => Student.empty(),
+    );
   }
 }

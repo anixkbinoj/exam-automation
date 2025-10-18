@@ -14,24 +14,36 @@ class _LoginScreenState extends State<LoginScreen> {
   String _role = 'student'; // default
 
   void _login() {
-    if (_idController.text.isEmpty) {
+    final id = _idController.text.trim();
+    if (id.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your Register Number')),
+        SnackBar(
+          content: Text(
+            'Please enter your ${_role == 'student' ? 'Register / Admission Number' : 'Admin ID'}',
+          ),
+        ),
       );
       return;
     }
 
     if (_role == 'admin') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminDashboard()),
-      );
+      // For simplicity, using a hardcoded admin ID.
+      // In a real app, this should be a secure authentication check.
+      if (id == 'admin') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid Admin ID')));
+      }
     } else {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              StudentDashboard(registerNumber: _idController.text.trim()),
+          builder: (context) => StudentDashboard(registerNumber: id),
         ),
       );
     }

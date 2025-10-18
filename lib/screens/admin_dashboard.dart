@@ -31,21 +31,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
         _fileName = result.files.single.name;
 
         await ExcelService.readAndStoreExcel(filePath);
-        setState(() {
-          _message = 'Excel file $_fileName uploaded successfully!';
-        });
+        _message = 'Excel file $_fileName uploaded successfully!';
       } else {
-        setState(() {
-          _message = 'No file selected';
-        });
+        _message = 'No file selected';
       }
     } catch (e) {
-      setState(() {
-        _message = 'Error: $e';
-      });
+      _message = 'Error: $e';
     } finally {
       setState(() {
         _isLoading = false;
+        // The message is also updated here, so it's part of the final state update.
       });
     }
   }
