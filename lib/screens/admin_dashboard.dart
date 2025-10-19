@@ -5,6 +5,7 @@ import 'upload_seating_screen.dart';
 import 'allot_teacher_screen.dart';
 import 'upload_notices_screen.dart';
 import 'view_reports_screen.dart';
+import 'login_screen.dart'; // Import LoginScreen for navigation
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -27,7 +28,13 @@ class AdminDashboard extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              // Navigate back to the login screen and remove all previous routes
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (Route<dynamic> route) => false,
+              );
+            },
           ),
           const SizedBox(width: 16),
         ],
@@ -48,10 +55,7 @@ class AdminDashboard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               "Manage exams, teacher duties, and notices from one place.",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
             ),
             const SizedBox(height: 30),
             GridView.count(
@@ -69,7 +73,8 @@ class AdminDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const UploadSeatingScreen()),
+                        builder: (context) => const UploadSeatingScreen(),
+                      ),
                     );
                   },
                 ),
@@ -81,7 +86,8 @@ class AdminDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const AllotTeacherScreen()),
+                        builder: (context) => const AllotTeacherScreen(),
+                      ),
                     );
                   },
                 ),
@@ -93,7 +99,8 @@ class AdminDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const UploadNoticesScreen()),
+                        builder: (context) => const UploadNoticesScreen(),
+                      ),
                     );
                   },
                 ),
@@ -105,7 +112,8 @@ class AdminDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ViewReportsScreen()),
+                        builder: (context) => const ViewReportsScreen(),
+                      ),
                     );
                   },
                 ),

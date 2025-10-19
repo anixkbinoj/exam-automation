@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For jsonDecode
-import 'package:http/http.dart' as http; // For making HTTP requests
+import 'package:http/http.dart' as http;
 import 'admin_dashboard.dart'; // Import the real AdminDashboard
 import 'student_dashboard.dart'; // Import the real StudentDashboard
 
@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // PHP backend URL
   final String baseUrl =
-      "http://10.3.2.145/exam_automation/login.php"; // replace with your server IP if needed
+      "http://192.168.1.35/exam_automation/login.php"; // replace with your server IP if needed
 
   Future<void> loginUser() async {
     setState(() {
@@ -39,8 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
+      final uri = Uri.parse(baseUrl);
       final response = await http.post(
-        Uri.parse(baseUrl),
+        uri,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'id': id, 'password': password, 'role': role},
       );
 
@@ -63,10 +65,15 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             // The existing StudentDashboard expects a registerNumber.
             // We'll pass the student's ID from the successful login.
+            // Assuming your PHP login response includes 'admission_number' for students.
+            final admissionNumber = data['admission_number'] as String? ?? '';
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => StudentDashboard(registerNumber: id),
+                builder: (_) => StudentDashboard(
+                  registerNumber: id,
+                  admissionNumber: admissionNumber,
+                ),
               ),
             );
           }
