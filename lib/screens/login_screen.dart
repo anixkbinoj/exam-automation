@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // For jsonDecode
+import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'admin_dashboard.dart'; // Import the real AdminDashboard
-import 'student_dashboard.dart'; // Import the real StudentDashboard
-import 'faculty_dashboard.dart'; // Import the new FacultyDashboard
+
+import 'admin_dashboard.dart';
+import 'student_dashboard.dart';
+import 'faculty_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,34 +16,28 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _selectedRole = 'student'; // default role
+  String _selectedRole = 'student';
   bool _isLoading = false;
 
-  // PHP backend URL
-  final String baseUrl =
-      "http://192.168.1.35/exam_automation/login.php"; // replace with your server IP if needed
+  final String baseUrl = "http://10.3.2.145/exam_automation/login.php";
 
   Future<void> loginUser() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final id = _idController.text.trim();
     final password = _passwordController.text.trim();
     final role = _selectedRole;
 
     if (id.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please enter ID and password')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please enter ID and password')));
       setState(() => _isLoading = false);
       return;
     }
 
     try {
-      final uri = Uri.parse(baseUrl);
       final response = await http.post(
-        uri,
+        Uri.parse(baseUrl),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'id': id, 'password': password, 'role': role},
       );
@@ -51,60 +46,53 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = jsonDecode(response.body);
 
         if (data['status'] == 'success') {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Login Successful!')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Login Successful!')));
 
-          // Navigate based on role
+          final userData = data['data'];
+
           if (role == 'admin') {
-            // The existing AdminDashboard doesn't take data, so we just navigate.
-            // You can modify AdminDashboard later to use the logged-in admin's data.
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const AdminDashboard()),
             );
           } else if (role == 'student') {
-            // The existing StudentDashboard expects a registerNumber.
-            // We'll pass the student's ID from the successful login.
-            // Assuming your PHP login response includes 'admission_number' for students.
-            final admissionNumber = data['admission_number'] as String? ?? '';
+            // Pass register_number from PHP data
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (_) => StudentDashboard(
-                  registerNumber: id,
-                  admissionNumber: admissionNumber,
+                  registerNumber: userData['register_number'],
+                  admissionNumber: userData['admission_number'] ?? '',
                 ),
               ),
             );
           } else if (role == 'faculty') {
-            // Navigate to the faculty dashboard, passing the faculty's ID.
+            // Pass faculty ID and name
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => FacultyDashboard(facultyId: id),
+                builder: (_) => FacultyDashboard(
+                  facultyId: int.parse(userData['id'].toString()),
+                  facultyName: userData['name'],
+                ),
               ),
             );
           }
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(data['message'])));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(data['message'])));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Server Error: ${response.statusCode}')),
-        );
+            SnackBar(content: Text('Server Error: ${response.statusCode}')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -115,24 +103,15 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Role selection
             DropdownButtonFormField<String>(
               value: _selectedRole,
-              items: [
-                const DropdownMenuItem(
-                  value: 'student',
-                  child: Text('Student'),
-                ),
-                const DropdownMenuItem(
-                  value: 'faculty',
-                  child: Text('Faculty'),
-                ),
-                const DropdownMenuItem(value: 'admin', child: Text('Admin')),
+              items: const [
+                DropdownMenuItem(value: 'student', child: Text('Student')),
+                DropdownMenuItem(value: 'faculty', child: Text('Faculty')),
+                DropdownMenuItem(value: 'admin', child: Text('Admin')),
               ],
               onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
+                setState(() => _selectedRole = value!);
               },
               decoration: const InputDecoration(
                 labelText: 'Select Role',
@@ -140,20 +119,16 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // ID input
             TextField(
               controller: _idController,
               decoration: InputDecoration(
-                labelText: _selectedRole == 'student'
-                    ? 'Register / Admission / Username'
-                    : 'Username',
+                labelText: _selectedRole == 'faculty'
+                    ? 'Faculty Name'
+                    : 'Register / Admission / Username',
                 border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Password input
             TextField(
               controller: _passwordController,
               obscureText: true,
@@ -163,17 +138,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Login button
             _isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: loginUser,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: const Text('Login'),
-                  ),
+              onPressed: loginUser,
+              style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50)),
+              child: const Text('Login'),
+            ),
           ],
         ),
       ),

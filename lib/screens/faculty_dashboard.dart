@@ -1,29 +1,133 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class FacultyDashboard extends StatelessWidget {
-  final String facultyId;
+// Screens for detailed pages
+import 'faculty_duties_page.dart';
+import 'faculty_notices_page.dart';
 
-  const FacultyDashboard({super.key, required this.facultyId});
+class FacultyDashboard extends StatefulWidget {
+  final int facultyId;
+  final String facultyName;
+
+  const FacultyDashboard({super.key, required this.facultyId, required this.facultyName});
+
+  @override
+  State<FacultyDashboard> createState() => _FacultyDashboardState();
+}
+
+class _FacultyDashboardState extends State<FacultyDashboard> {
+  bool isLoading = true;
+  List<dynamic> duties = [];
+  List<dynamic> notices = [];
+
+  final String dutiesUrl = "http://10.3.2.145/fetch_assigned_duties.php";
+  final String noticesUrl = "http://10.3.2.145/fetch_notices.php";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDashboardData();
+  }
+
+  Future<void> fetchDashboardData() async {
+    setState(() => isLoading = true);
+
+    try {
+      final dutiesResponse = await http.post(
+        Uri.parse(dutiesUrl),
+        body: {'faculty_id': widget.facultyId.toString()},
+      );
+
+      final noticesResponse = await http.get(Uri.parse(noticesUrl));
+
+      setState(() {
+        duties = jsonDecode(dutiesResponse.body);
+        notices = jsonDecode(noticesResponse.body);
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching data: $e");
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text("Faculty Dashboard"),
+        backgroundColor: const Color(0xFF1E293B),
+        title: Text(
+          "Faculty Dashboard",
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (Route<dynamic> route) => false,
-              );
-            },
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: fetchDashboardData,
           ),
+          const SizedBox(width: 16),
         ],
       ),
-      body: Center(child: Text("Welcome, Faculty ID: $facultyId")),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Welcome, ${widget.facultyName} 👋",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+            ),
+            const SizedBox(height: 30),
+
+            // Buttons
+            Center(
+              child: Column(
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.assignment),
+                    label: const Text("View Assigned Duties"),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(250, 50),
+                      backgroundColor: const Color(0xFF2563EB),
+                      textStyle: const TextStyle(fontSize: 18),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FacultyDutiesPage(duties: duties),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.notifications_active),
+                    label: const Text("View Notices"),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(250, 50),
+                      backgroundColor: const Color(0xFFF59E0B),
+                      textStyle: const TextStyle(fontSize: 18),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FacultyNoticesPage(notices: notices),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

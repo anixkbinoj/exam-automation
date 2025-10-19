@@ -23,7 +23,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Map<String, dynamic>? studentData;
   bool isLoading = true;
   final String apiUrl =
-      "http://192.168.1.35/exam_automation/fetch_student_details.php";
+      "http://10.3.2.145/exam_automation/fetch_student_details.php";
 
   @override
   void initState() {

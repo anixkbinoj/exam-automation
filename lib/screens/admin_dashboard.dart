@@ -6,7 +6,7 @@ import 'allot_teacher_screen.dart';
 import 'upload_notices_screen.dart';
 import 'upload_timetable_screen.dart'; // Import the new screen
 import 'view_reports_screen.dart';
-import 'login_screen.dart'; // Import LoginScreen for navigation
+import 'login_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -30,10 +30,9 @@ class AdminDashboard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              // Navigate back to the login screen and remove all previous routes
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (Route<dynamic> route) => false,
+                    (Route<dynamic> route) => false,
               );
             },
           ),
@@ -136,7 +135,7 @@ class AdminDashboard extends StatelessWidget {
             const SizedBox(height: 30),
             Center(
               child: Text(
-                "Exam Hall Automation System ",
+                "Exam Hall Automation System",
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: Colors.grey[600],
