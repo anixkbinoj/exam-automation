@@ -4,6 +4,7 @@ import '../widgets/dashboard_card.dart';
 import 'upload_seating_screen.dart';
 import 'allot_teacher_screen.dart';
 import 'upload_notices_screen.dart';
+import 'upload_timetable_screen.dart'; // Import the new screen
 import 'view_reports_screen.dart';
 import 'login_screen.dart'; // Import LoginScreen for navigation
 
@@ -113,6 +114,19 @@ class AdminDashboard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ViewReportsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                DashboardCard(
+                  title: "Upload Time Table",
+                  icon: Icons.table_chart,
+                  color: const Color(0xFFEF4444),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UploadTimeTableScreen(),
                       ),
                     );
                   },

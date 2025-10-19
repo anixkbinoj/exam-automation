@@ -3,6 +3,7 @@ import 'dart:convert'; // For jsonDecode
 import 'package:http/http.dart' as http;
 import 'admin_dashboard.dart'; // Import the real AdminDashboard
 import 'student_dashboard.dart'; // Import the real StudentDashboard
+import 'faculty_dashboard.dart'; // Import the new FacultyDashboard
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
               context,
               MaterialPageRoute(builder: (_) => const AdminDashboard()),
             );
-          } else {
+          } else if (role == 'student') {
             // The existing StudentDashboard expects a registerNumber.
             // We'll pass the student's ID from the successful login.
             // Assuming your PHP login response includes 'admission_number' for students.
@@ -74,6 +75,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   registerNumber: id,
                   admissionNumber: admissionNumber,
                 ),
+              ),
+            );
+          } else if (role == 'faculty') {
+            // Navigate to the faculty dashboard, passing the faculty's ID.
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FacultyDashboard(facultyId: id),
               ),
             );
           }
@@ -113,6 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const DropdownMenuItem(
                   value: 'student',
                   child: Text('Student'),
+                ),
+                const DropdownMenuItem(
+                  value: 'faculty',
+                  child: Text('Faculty'),
                 ),
                 const DropdownMenuItem(value: 'admin', child: Text('Admin')),
               ],
