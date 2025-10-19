@@ -1,69 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import '../services/excel_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/dashboard_card.dart';
+import 'upload_seating_screen.dart';
+import 'allot_teacher_screen.dart';
+import 'upload_notices_screen.dart';
+import 'view_reports_screen.dart';
 
-class AdminDashboard extends StatefulWidget {
+class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
-
-  @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
-}
-
-class _AdminDashboardState extends State<AdminDashboard> {
-  String? _fileName;
-  bool _isLoading = false;
-  String _message = '';
-
-  Future<void> _pickAndUploadExcel() async {
-    setState(() {
-      _isLoading = true;
-      _message = '';
-    });
-
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-        _fileName = result.files.single.name;
-
-        await ExcelService.readAndStoreExcel(filePath);
-        _message = 'Excel file $_fileName uploaded successfully!';
-      } else {
-        _message = 'No file selected';
-      }
-    } catch (e) {
-      _message = 'Error: $e';
-    } finally {
-      setState(() {
-        _isLoading = false;
-        // The message is also updated here, so it's part of the final state update.
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Dashboard')),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _pickAndUploadExcel,
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Upload Excel File'),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(_message),
-                ],
+      backgroundColor: const Color(0xFFF5F7FB),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xFF1E293B),
+        title: Text(
+          "Admin Dashboard",
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Welcome, Admin 👋",
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF334155),
               ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Manage exams, teacher duties, and notices from one place.",
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 30),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                DashboardCard(
+                  title: "Upload Seating Excel",
+                  icon: Icons.upload_file,
+                  color: const Color(0xFF2563EB),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const UploadSeatingScreen()),
+                    );
+                  },
+                ),
+                DashboardCard(
+                  title: "Allot Teacher Duties",
+                  icon: Icons.assignment_ind,
+                  color: const Color(0xFF10B981),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AllotTeacherScreen()),
+                    );
+                  },
+                ),
+                DashboardCard(
+                  title: "Upload Notices",
+                  icon: Icons.notifications_active,
+                  color: const Color(0xFFF59E0B),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const UploadNoticesScreen()),
+                    );
+                  },
+                ),
+                DashboardCard(
+                  title: "View Reports",
+                  icon: Icons.bar_chart,
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ViewReportsScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: Text(
+                "Exam Hall Automation System ",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
