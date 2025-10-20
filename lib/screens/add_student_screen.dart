@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class AddStudentScreen extends StatefulWidget {
   const AddStudentScreen({super.key});
@@ -31,19 +32,21 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         isLoading = true;
       });
 
-      var url = Uri.parse('http://10.3.2.145/add_student.php');
-      var response = await http.post(url, body: {
-        'register_number': registerController.text,
-        'admission_number': admissionController.text,
-        'login_id': loginIdController.text,
-        'username': usernameController.text,
-        'name': nameController.text,
-        'department': departmentController.text,
-        'semester': semesterController.text,
-        'class': classController.text,
-        'email': emailController.text,
-        'password': passwordController.text,
-      });
+      var response = await http.post(
+        Uri.parse(ApiConfig.addStudent),
+        body: {
+          'register_number': registerController.text,
+          'admission_number': admissionController.text,
+          'login_id': loginIdController.text,
+          'username': usernameController.text,
+          'name': nameController.text,
+          'department': departmentController.text,
+          'semester': semesterController.text,
+          'class': classController.text,
+          'email': emailController.text,
+          'password': passwordController.text,
+        },
+      );
 
       setState(() {
         isLoading = false;
@@ -51,14 +54,14 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
 
       if (response.statusCode == 200) {
         var res = response.body;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(res)));
         _formKey.currentState!.reset();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error adding student.")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Error adding student.")));
       }
     }
   }
@@ -66,12 +69,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Add Student",
-          style: GoogleFonts.poppins(),
-        ),
-      ),
+      appBar: AppBar(title: Text("Add Student", style: GoogleFonts.poppins())),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -85,7 +83,9 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
               ),
               TextFormField(
                 controller: admissionController,
-                decoration: const InputDecoration(labelText: 'Admission Number'),
+                decoration: const InputDecoration(
+                  labelText: 'Admission Number',
+                ),
                 validator: (value) => value!.isEmpty ? 'Required' : null,
               ),
               TextFormField(
@@ -128,9 +128,9 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
               isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: addStudent,
-                child: const Text("Add Student"),
-              ),
+                      onPressed: addStudent,
+                      child: const Text("Add Student"),
+                    ),
             ],
           ),
         ),
