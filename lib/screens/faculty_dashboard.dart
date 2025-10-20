@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 // Screens for detailed pages
 import 'faculty_duties_page.dart';
-import 'faculty_notices_page.dart';
+import 'view_notices_screen.dart';
 
 class FacultyDashboard extends StatefulWidget {
   final int facultyId;

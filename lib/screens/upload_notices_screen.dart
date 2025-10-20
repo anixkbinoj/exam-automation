@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
+import 'dart:io';
 
 class UploadNoticesScreen extends StatefulWidget {
   const UploadNoticesScreen({super.key});
@@ -11,23 +13,38 @@ class UploadNoticesScreen extends StatefulWidget {
 
 class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
   final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  File? selectedFile;
 
-  final String apiUrl = "http://10.3.2.145/exam_automation/upload_notice.php";
+  final String apiUrl = "http://10.3.2.145/exam_automation/upload_notice_pdf.php";
+
+  Future<void> pickPDF() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedFile = File(result.files.single.path!);
+      });
+    }
+  }
 
   Future<void> uploadNotice() async {
-    if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("All fields are required")));
+    if (titleController.text.isEmpty || selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Title and PDF file are required")));
       return;
     }
 
-    final response = await http.post(Uri.parse(apiUrl), body: {
-      'title': titleController.text,
-      'description': descriptionController.text,
-    });
+    var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+    request.fields['title'] = titleController.text;
+    request.files.add(await http.MultipartFile.fromPath('pdf', selectedFile!.path));
 
-    final data = jsonDecode(response.body);
+    var response = await request.send();
+    var responseBody = await response.stream.bytesToString();
+    var data = jsonDecode(responseBody);
+
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(data['message'])));
   }
@@ -44,10 +61,13 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
               controller: titleController,
               decoration: const InputDecoration(labelText: "Notice Title"),
             ),
-            TextField(
-              controller: descriptionController,
-              decoration: const InputDecoration(labelText: "Notice Description"),
-              maxLines: 4,
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: pickPDF,
+              icon: const Icon(Icons.attach_file),
+              label: Text(selectedFile != null
+                  ? "Selected: ${selectedFile!.path.split('/').last}"
+                  : "Pick PDF"),
             ),
             const SizedBox(height: 20),
             ElevatedButton(

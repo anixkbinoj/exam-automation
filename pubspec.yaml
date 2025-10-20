@@ -37,7 +37,7 @@ dependencies:
   file_picker: ^8.0.6
   excel: ^4.0.4
   http: ^1.2.2
-
+  url_launcher: ^6.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
