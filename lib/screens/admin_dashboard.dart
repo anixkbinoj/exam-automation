@@ -7,6 +7,7 @@ import 'upload_notices_screen.dart';
 import 'upload_timetable_screen.dart'; // Import the new screen
 import 'view_reports_screen.dart';
 import 'login_screen.dart';
+import 'add_student_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -126,6 +127,19 @@ class AdminDashboard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const UploadTimeTableScreen(),
+                      ),
+                    );
+                  },
+                ),
+                DashboardCard(
+                  title: "Add Students",
+                  icon: Icons.person_add,
+                  color: const Color(0xFF3B82F6),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddStudentScreen(),
                       ),
                     );
                   },
