@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'seating_arrangement_screen.dart'; // Import the new screen
 import 'exam_timetable_screen.dart'; // Placeholder for timetable
 import 'view_notices_screen.dart'; // Placeholder for notices
+import 'login_screen.dart'; // For logout navigation
 
 class StudentDashboard extends StatefulWidget {
   final String registerNumber;
@@ -79,6 +80,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
         backgroundColor: themeColor,
         title: const Text('Student Dashboard'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (Route<dynamic> route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
