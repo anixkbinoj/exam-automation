@@ -23,7 +23,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Map<String, dynamic>? studentData;
   bool isLoading = true;
   final String apiUrl =
-      "http://192.168.1.35/exam_automation/fetch_student_details.php";
+      "http://10.159.50.69/exam_automation/fetch_student_details.php";
 
   @override
   void initState() {
@@ -60,6 +60,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   void showError(String message) {
+    if (!mounted) return; // Check if the widget is still in the tree
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
@@ -153,9 +154,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => SeatingArrangementPage(
-                                registerNumber: studentData!['register_number'],
-                                admissionNumber:
-                                    studentData!['admission_number'],
+                                registerNumber: widget.registerNumber,
+                                admissionNumber: widget.admissionNumber,
                               ),
                             ),
                           );

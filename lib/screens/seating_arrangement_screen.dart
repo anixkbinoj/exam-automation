@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 
 class SeatingArrangementPage extends StatefulWidget {
   final String registerNumber;
   final String admissionNumber;
 
   const SeatingArrangementPage({
-    super.key,
+    Key? key,
     required this.registerNumber,
     required this.admissionNumber,
-  });
+  }) : super(key: key);
 
   @override
   State<SeatingArrangementPage> createState() => _SeatingArrangementPageState();
@@ -29,74 +29,127 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
   }
 
   Future<void> fetchSeating() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+      seatingData = [];
+    });
+
     final url = Uri.parse(
-      "http://192.168.1.35/exam_automation/get_seating.php",
-    ); // Change to your server IP
+      "http://10.159.50.69/exam_automation/get_seating.php",
+    );
 
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {
           "register_number": widget.registerNumber,
           "admission_number": widget.admissionNumber,
         },
       );
 
+      if (!mounted) return;
+
+      debugPrint("Server response: ${response.body}");
+
       final data = jsonDecode(response.body);
 
-      if (data['status'] == 'success') {
-        final List temp = data['seating'];
-        // Cast to the correct type to avoid runtime errors.
-        seatingData = List<Map<String, dynamic>>.from(temp);
+      if (data['status'] == 'success' && data['seating'] != null) {
+        final List seatingList = data['seating'];
+        if (seatingList.isEmpty) {
+          errorMessage = 'No seating arrangement found for you.';
+        } else {
+          seatingData = List<Map<String, dynamic>>.from(seatingList);
+        }
       } else {
-        errorMessage = data['message'] ?? 'No seating data found';
+        errorMessage = data['message'] ?? 'No seating arrangement found';
       }
     } catch (e) {
-      errorMessage = 'Failed to fetch seating arrangement';
+      debugPrint("Failed to fetch seating: $e");
+      errorMessage =
+          'Failed to fetch seating arrangement. Please check your connection.';
     }
 
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildExamCard(Map<String, dynamic> item) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item['exam_name'] ?? 'No Subject',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "Date: ${item['exam_date'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            Text(
+              "Hall: ${item['exam_hall'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            Text(
+              "Room: ${item['room_no'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            Text(
+              "Seat: ${item['seat_number'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            Text(
+              "Department: ${item['department'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            Text(
+              "Semester: ${item['semester'] ?? '-'}",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Seating Arrangement"),
+        title: const Text("My Seating Arrangement"),
         backgroundColor: Colors.deepPurple,
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: fetchSeating),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : seatingData.isEmpty
-          ? Center(child: Text(errorMessage))
+          ? Center(
+              child: Text(
+                errorMessage.isNotEmpty ? errorMessage : "No data available",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+            )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(bottom: 16),
               itemCount: seatingData.length,
               itemBuilder: (context, index) {
-                final item = seatingData[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.event_seat,
-                      color: Colors.deepPurple,
-                    ),
-                    title: Text(
-                      item['exam_name']?.toString() ?? 'No Subject',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      "Hall: ${item['room_number']}\nSeat: ${item['seat_number']}\nDate: ${item['exam_date']}\nTime: ${item['exam_time']}",
-                      style: GoogleFonts.poppins(fontSize: 13),
-                    ),
-                  ),
-                );
+                return _buildExamCard(seatingData[index]);
               },
             ),
     );

@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // PHP backend URL
   final String baseUrl =
-      "http://192.168.1.35/exam_automation/login.php"; // replace with your server IP if needed
+      "http://10.159.50.69/exam_automation/login.php"; // replace with your server IP if needed
 
   Future<void> loginUser() async {
     setState(() {
