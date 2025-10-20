@@ -13,5 +13,14 @@ class ApiConfig {
 
   // --- Admin ---
   static const String uploadSeatingExcel = "$_baseUrl/upload_seating_excel.php";
-  // TODO: Add endpoints for notices, timetable, duties, etc.
+  static const String addStudent = "$_baseUrl/add_student.php";
+  // Note: The following endpoints were pointing to a different IP (10.3.2.145).
+  // They have been consolidated to the base URL for consistency.
+  // Please ensure your server is configured to handle these routes.
+  static const String getTimetable = "$_baseUrl/get_timetable.php";
+  static const String getNotices = "$_baseUrl/get_notices.php";
+
+  // --- Faculty ---
+  static const String fetchAssignedDuties =
+      "$_baseUrl/fetch_assigned_duties.php";
 }

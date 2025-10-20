@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/api_config.dart';
 
 class ExamTimeTableScreen extends StatefulWidget {
   const ExamTimeTableScreen({super.key});
@@ -14,8 +15,6 @@ class _ExamTimeTableScreenState extends State<ExamTimeTableScreen> {
   List<dynamic> timetables = [];
   bool isLoading = true;
 
-  final String apiUrl = "http://10.3.2.145/exam_automation/get_timetable.php";
-
   @override
   void initState() {
     super.initState();
@@ -24,7 +23,7 @@ class _ExamTimeTableScreenState extends State<ExamTimeTableScreen> {
 
   Future<void> fetchTimeTable() async {
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(ApiConfig.getTimetable));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -37,8 +36,9 @@ class _ExamTimeTableScreenState extends State<ExamTimeTableScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -47,8 +47,9 @@ class _ExamTimeTableScreenState extends State<ExamTimeTableScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Unable to open file")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Unable to open file")));
     }
   }
 
@@ -61,36 +62,42 @@ class _ExamTimeTableScreenState extends State<ExamTimeTableScreen> {
           : timetables.isEmpty
           ? const Center(child: Text("No timetable available"))
           : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: timetables.length,
-        itemBuilder: (context, index) {
-          final item = timetables[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.all(16),
+              itemCount: timetables.length,
+              itemBuilder: (context, index) {
+                final item = timetables[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      item['subject'] ?? 'Unknown Subject',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text(
+                      "Date: ${item['exam_date']}\nSession: ${item['session']}",
+                    ),
+                    trailing:
+                        item['file_path'] != null &&
+                            item['file_path'].toString().isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.red,
+                            ),
+                            onPressed: () => openPDF(item['file_path']),
+                          )
+                        : null,
+                  ),
+                );
+              },
             ),
-            child: ListTile(
-              title: Text(
-                item['subject'] ?? 'Unknown Subject',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              subtitle: Text(
-                  "Date: ${item['exam_date']}\nSession: ${item['session']}"),
-              trailing: item['file_path'] != null &&
-                  item['file_path'].toString().isNotEmpty
-                  ? IconButton(
-                icon: const Icon(Icons.picture_as_pdf,
-                    color: Colors.red),
-                onPressed: () => openPDF(item['file_path']),
-              )
-                  : null,
-            ),
-          );
-        },
-      ),
     );
   }
 }

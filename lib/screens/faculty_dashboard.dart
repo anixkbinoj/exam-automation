@@ -40,16 +40,12 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     });
 
     try {
-      // TODO: Add these URLs to api_config.dart
-      final dutiesUrl = "http://10.3.2.145/fetch_assigned_duties.php";
-      final noticesUrl = "http://10.3.2.145/fetch_notices.php";
-
       final dutiesResponse = await http.post(
-        Uri.parse(dutiesUrl),
+        Uri.parse(ApiConfig.fetchAssignedDuties),
         body: {'faculty_id': widget.facultyId.toString()},
       );
 
-      final noticesResponse = await http.get(Uri.parse(noticesUrl));
+      final noticesResponse = await http.get(Uri.parse(ApiConfig.getNotices));
 
       if (!mounted) return;
 
@@ -169,7 +165,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    FacultyNoticesPage(notices: notices),
+                                    ViewNoticesScreen(notices: notices),
                               ),
                             );
                           },

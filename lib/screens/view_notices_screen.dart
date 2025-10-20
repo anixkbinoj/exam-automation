@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/api_config.dart';
 
 class ViewNoticesScreen extends StatefulWidget {
   final List<dynamic>? notices; // optional parameter
@@ -15,8 +16,6 @@ class ViewNoticesScreen extends StatefulWidget {
 class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
   List notices = [];
   bool isLoading = true;
-
-  final String apiUrl = "http://10.3.2.145/exam_automation/get_notices.php";
 
   @override
   void initState() {
@@ -33,7 +32,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
 
   Future<void> fetchNotices() async {
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(ApiConfig.getNotices));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -42,14 +41,15 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
         });
       } else {
         setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load notices")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to load notices")));
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -58,8 +58,9 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Could not open PDF")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Could not open PDF")));
     }
   }
 
@@ -72,25 +73,27 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
           : notices.isEmpty
           ? const Center(child: Text("No notices available"))
           : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: notices.length,
-        itemBuilder: (context, index) {
-          final notice = notices[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: ListTile(
-              leading: const Icon(Icons.picture_as_pdf,
-                  color: Colors.red),
-              title: Text(notice['title']),
-              subtitle: Text(notice['uploaded_at'] ?? ""),
-              trailing: IconButton(
-                icon: const Icon(Icons.download),
-                onPressed: () => openPDF(notice['file_path']),
-              ),
+              padding: const EdgeInsets.all(16),
+              itemCount: notices.length,
+              itemBuilder: (context, index) {
+                final notice = notices[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red,
+                    ),
+                    title: Text(notice['title']),
+                    subtitle: Text(notice['uploaded_at'] ?? ""),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.download),
+                      onPressed: () => openPDF(notice['file_path']),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
