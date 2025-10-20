@@ -48,10 +48,6 @@ class _AllotTeacherScreenState extends State<AllotTeacherScreen> {
         child: Column(
           children: [
             TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Faculty Email"),
-            ),
-            TextField(
               controller: classController,
               decoration: const InputDecoration(labelText: "Class"),
             ),
