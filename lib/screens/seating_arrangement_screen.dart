@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class SeatingArrangementPage extends StatefulWidget {
   final String registerNumber;
@@ -43,8 +43,8 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
       final response = await http.post(
         url,
         body: {
-          "register_number": widget.registerNumber,
-          "admission_number": widget.admissionNumber,
+          "register_number": widget.registerNumber.trim(),
+          "admission_number": widget.admissionNumber.trim(),
         },
       );
 
@@ -57,7 +57,7 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
       if (data['status'] == 'success' && data['seating'] != null) {
         final List seatingList = data['seating'];
         if (seatingList.isEmpty) {
-          errorMessage = 'No seating arrangement found for you.';
+          errorMessage = 'No seating arrangement found for your number.';
         } else {
           seatingData = List<Map<String, dynamic>>.from(seatingList);
         }
@@ -132,7 +132,11 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
         title: const Text("My Seating Arrangement"),
         backgroundColor: Colors.deepPurple,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: fetchSeating),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: "Refresh",
+            onPressed: fetchSeating,
+          ),
         ],
       ),
       body: isLoading
