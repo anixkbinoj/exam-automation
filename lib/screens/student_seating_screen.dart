@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import '../config/api_config.dart';
 
 class StudentSeatingScreen extends StatefulWidget {
   final String registerNumber;
@@ -29,7 +30,7 @@ class _StudentSeatingScreenState extends State<StudentSeatingScreen> {
   }
 
   Future<void> _fetchSeatingArrangement() async {
-    var uri = Uri.parse('http://10.159.50.69/exam_automation/get_seating.php');
+    var uri = Uri.parse(ApiConfig.getSeating);
 
     try {
       var response = await http.post(

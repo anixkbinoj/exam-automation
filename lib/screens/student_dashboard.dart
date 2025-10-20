@@ -5,6 +5,7 @@ import 'seating_arrangement_screen.dart'; // Import the new screen
 import 'exam_timetable_screen.dart'; // Placeholder for timetable
 import 'view_notices_screen.dart'; // Placeholder for notices
 import 'login_screen.dart'; // For logout navigation
+import '../config/api_config.dart'; // Use the centralized API config
 
 class StudentDashboard extends StatefulWidget {
   final String registerNumber;
@@ -23,8 +24,7 @@ class StudentDashboard extends StatefulWidget {
 class _StudentDashboardState extends State<StudentDashboard> {
   Map<String, dynamic>? studentData;
   bool isLoading = true;
-  final String apiUrl =
-      "http://192.168.1.35/exam_automation/fetch_student_details.php";
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -33,40 +33,49 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Future<void> fetchStudentDetails() async {
+    setState(() {
+      isLoading = true;
+      _errorMessage = '';
+    });
+
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(ApiConfig.fetchStudentDetails),
         body: {
           'register_number': widget.registerNumber,
           'admission_number': widget.admissionNumber,
         },
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success') {
           setState(() {
             studentData = data['student'];
-            isLoading = false;
           });
         } else {
-          showError(data['message']);
+          _handleError(data['message'] ?? 'Student details not found.');
         }
       } else {
-        showError("Server error: ${response.statusCode}");
+        _handleError("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      showError("Error: $e");
+      _handleError("An error occurred: $e");
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  void showError(String message) {
+  void _handleError(String message) {
     if (!mounted) return; // Check if the widget is still in the tree
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
     setState(() {
-      isLoading = false;
+      _errorMessage = message;
     });
   }
 
@@ -95,8 +104,28 @@ class _StudentDashboardState extends State<StudentDashboard> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : studentData == null
-          ? const Center(child: Text('No data found.'))
+          : _errorMessage.isNotEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: fetchStudentDetails,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Retry"),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(

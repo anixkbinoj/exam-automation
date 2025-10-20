@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class UploadSeatingScreen extends StatefulWidget {
   const UploadSeatingScreen({super.key});
@@ -27,10 +28,6 @@ class _UploadSeatingScreenState extends State<UploadSeatingScreen> {
   ];
 
   final List<String> semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
-  // Your PHP endpoint
-  final String uploadUrl =
-      "http://10.159.50.69/exam_automation/upload_seating_excel.php";
 
   Future<void> uploadExcel() async {
     if (selectedDepartment == null || selectedSemester == null) {
@@ -59,7 +56,10 @@ class _UploadSeatingScreenState extends State<UploadSeatingScreen> {
       Uint8List? fileBytes = result.files.first.bytes;
       String fileName = result.files.first.name;
 
-      var request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.uploadSeatingExcel),
+      );
 
       // Attach form data
       request.fields['department'] = selectedDepartment!;

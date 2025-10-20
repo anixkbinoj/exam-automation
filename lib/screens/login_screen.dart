@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'admin_dashboard.dart'; // Import the real AdminDashboard
 import 'student_dashboard.dart'; // Import the real StudentDashboard
 import 'faculty_dashboard.dart'; // Import the new FacultyDashboard
+import '../config/api_config.dart'; // Use the centralized API config
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,10 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String _selectedRole = 'student';
   bool _isLoading = false;
 
-  // PHP backend URL
-  final String baseUrl =
-      "http://192.168.1.35/exam_automation/login.php"; // replace with your server IP if needed
-
   Future<void> loginUser() async {
     setState(() => _isLoading = true);
 
@@ -30,39 +28,37 @@ class _LoginScreenState extends State<LoginScreen> {
     final role = _selectedRole;
 
     if (id.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please enter ID and password')));
+      // No mounted check needed here as it's not in an async gap
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter ID and password')),
+      );
       setState(() => _isLoading = false);
       return;
     }
 
     try {
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse(ApiConfig.login),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'id': id, 'password': password, 'role': role},
       );
 
-      final data = jsonDecode(response.body);
+      // Crucial check after an async operation
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
         if (data['status'] == 'success') {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Login Successful!')));
+          // The SnackBar was removed as it would not be visible before navigation.
 
           // Navigate based on role
           if (role == 'admin') {
-            // The existing AdminDashboard doesn't take data, so we just navigate.
-            // You can modify AdminDashboard later to use the logged-in admin's data.
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const AdminDashboard()),
             );
           } else if (role == 'student') {
-            // The existing StudentDashboard expects a registerNumber.
-            // We'll pass the student's ID from the successful login.
-            // Assuming your PHP login response includes 'admission_number' for students.
             final admissionNumber = data['admission_number'] as String? ?? '';
             Navigator.pushReplacement(
               context,
@@ -74,11 +70,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           } else if (role == 'faculty') {
-            // Navigate to the faculty dashboard, passing the faculty's ID.
+            // Assuming login response includes faculty_name
+            final facultyName = data['faculty_name'] as String? ?? 'Faculty';
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => FacultyDashboard(facultyId: id),
+                builder: (_) => FacultyDashboard(
+                  facultyId: int.tryParse(id) ?? 0,
+                  facultyName: facultyName,
+                ),
               ),
             );
           }
@@ -93,11 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
 
-    setState(() => _isLoading = false);
+    // Only update state if the widget is still mounted (i.e., login failed)
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -115,68 +120,50 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Stack(
-          children: [
-            // Role selection
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              items: [
-                const DropdownMenuItem(
-                  value: 'student',
-                  child: Text('Student'),
-                ),
-                const DropdownMenuItem(
-                  value: 'faculty',
-                  child: Text('Faculty'),
-                ),
-                const DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
-              },
-              decoration: const InputDecoration(
-                labelText: 'Select Role',
-                border: OutlineInputBorder(),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              width: isWeb ? 400 : double.infinity,
+              margin: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // ID input
-            TextField(
-              controller: _idController,
-              decoration: InputDecoration(
-                labelText: _selectedRole == 'student'
-                    ? 'Register / Admission / Username'
-                    : 'Username',
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Password input
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Login button
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: loginUser,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Login',
+                    style: GoogleFonts.poppins(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
                     ),
-                    child: const Text('Login'),
                   ),
-          ],
+                  const SizedBox(height: 24),
+                  _buildRoleSelector(),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _idController,
+                    label: _selectedRole == 'student'
+                        ? 'Register / Admission No'
+                        : 'Username',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'Password',
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 30),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : _buildLoginButton(),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -247,6 +234,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  // ✨ Premium Login Button
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      onPressed: loginUser,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 50),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 5,
+        shadowColor: Colors.deepPurple.withOpacity(0.5),
+      ),
+      child: Text(
+        'Login',
+        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+      ),
     );
   }
 
