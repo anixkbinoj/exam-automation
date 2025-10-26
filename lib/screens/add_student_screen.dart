@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -53,11 +54,37 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       });
 
       if (response.statusCode == 200) {
-        var res = response.body;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(res)));
-        _formKey.currentState!.reset();
+        try {
+          final data = json.decode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Status unknown'),
+              backgroundColor: data['status'] == 'success'
+                  ? Colors.green
+                  : Colors.red,
+            ),
+          );
+          if (data['status'] == 'success') {
+            _formKey.currentState!.reset();
+            // Also clear controllers
+            [
+              registerController,
+              admissionController,
+              loginIdController,
+              usernameController,
+              nameController,
+              departmentController,
+              semesterController,
+              classController,
+              emailController,
+              passwordController,
+            ].forEach((controller) => controller.clear());
+          }
+        } on FormatException {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Invalid response from server.")),
+          );
+        }
       } else {
         ScaffoldMessenger.of(
           context,

@@ -50,8 +50,16 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
       if (!mounted) return;
 
       setState(() {
-        duties = jsonDecode(dutiesResponse.body);
-        notices = jsonDecode(noticesResponse.body);
+        if (dutiesResponse.statusCode == 200) {
+          duties = jsonDecode(dutiesResponse.body);
+        } else {
+          _errorMessage += 'Failed to load duties. ';
+        }
+        if (noticesResponse.statusCode == 200) {
+          notices = jsonDecode(noticesResponse.body);
+        } else {
+          _errorMessage += 'Failed to load notices.';
+        }
       });
     } catch (e) {
       if (!mounted) return;

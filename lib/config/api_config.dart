@@ -1,10 +1,11 @@
 class ApiConfig {
   // Use '10.0.2.2' for Android Emulator, 'localhost' for web/desktop,
   // or your machine's network IP for a physical device.
-  static const String _baseUrl = "http://10.159.50.69/exam_automation";
+  static const String _baseUrl = "http://192.168.1.34/exam_automation";
 
   // --- Authentication ---
   static const String login = "$_baseUrl/login.php";
+  static const String allotTeacher = "$_baseUrl/allot_teacher.php";
 
   // --- Student ---
   static const String fetchStudentDetails =
@@ -13,6 +14,7 @@ class ApiConfig {
 
   // --- Admin ---
   static const String uploadSeatingExcel = "$_baseUrl/upload_seating_excel.php";
+  static const String uploadNoticePdf = "$_baseUrl/upload_notice_pdf.php";
   static const String addStudent = "$_baseUrl/add_student.php";
   // Note: The following endpoints were pointing to a different IP (10.3.2.145).
   // They have been consolidated to the base URL for consistency.

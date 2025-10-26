@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../config/api_config.dart';
 
 class UploadNoticesScreen extends StatefulWidget {
   const UploadNoticesScreen({super.key});
@@ -21,8 +22,6 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
   Uint8List? webFile;
   String? fileName;
   bool isLoading = false;
-
-  final String apiUrl = "http://10.3.2.145/exam_automation/upload_notice_pdf.php";
 
   Future<void> pickPDF() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -44,7 +43,9 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
   }
 
   Future<void> uploadNotice() async {
-    if (titleController.text.isEmpty || descriptionController.text.isEmpty || (selectedFile == null && webFile == null)) {
+    if (titleController.text.isEmpty ||
+        descriptionController.text.isEmpty ||
+        (selectedFile == null && webFile == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("All fields and PDF file are required")),
       );
@@ -54,18 +55,21 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
     setState(() => isLoading = true);
 
     try {
-      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.uploadNoticePdf),
+      );
       request.fields['title'] = titleController.text;
       request.fields['description'] = descriptionController.text;
 
       if (kIsWeb && webFile != null) {
-        request.files.add(http.MultipartFile.fromBytes(
-          'pdf',
-          webFile!,
-          filename: fileName,
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes('pdf', webFile!, filename: fileName),
+        );
       } else if (selectedFile != null) {
-        request.files.add(await http.MultipartFile.fromPath('pdf', selectedFile!.path));
+        request.files.add(
+          await http.MultipartFile.fromPath('pdf', selectedFile!.path),
+        );
       }
 
       var response = await request.send();
@@ -86,8 +90,9 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Upload failed: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Upload failed: $e")));
     } finally {
       setState(() => isLoading = false);
     }
@@ -109,7 +114,9 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
           child: Card(
             elevation: 14,
             shadowColor: Colors.deepPurple.withOpacity(0.3),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
             color: Colors.white.withOpacity(0.95),
             child: Container(
               padding: const EdgeInsets.all(30),
@@ -138,7 +145,10 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Color(0xFF6A1B9A), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6A1B9A),
+                            width: 2,
+                          ),
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
@@ -156,7 +166,10 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Color(0xFF6A1B9A), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6A1B9A),
+                            width: 2,
+                          ),
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
@@ -173,7 +186,10 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9575CD),
-                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 25,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
@@ -184,25 +200,30 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
 
                     // Upload button
                     isLoading
-                        ? const CircularProgressIndicator(color: Colors.deepPurple)
+                        ? const CircularProgressIndicator(
+                            color: Colors.deepPurple,
+                          )
                         : ElevatedButton(
-                      onPressed: uploadNotice,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7E57C2),
-                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 8,
-                      ),
-                      child: const Text(
-                        "Upload Notice",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                            onPressed: uploadNotice,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF7E57C2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 25,
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 8,
+                            ),
+                            child: const Text(
+                              "Upload Notice",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),

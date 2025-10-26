@@ -77,49 +77,62 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
   }
 
   Widget _buildExamCard(Map<String, dynamic> item) {
+    // This UI is merged from the redundant 'student_seating_screen.dart' for a better look.
     return Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Colors.deepPurpleAccent),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               item['exam_name'] ?? 'No Subject',
               style: GoogleFonts.poppins(
-                fontSize: 18,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade800,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              "Date: ${item['exam_date'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
+            const SizedBox(height: 12),
+            _buildDetailRow(Icons.calendar_today, "Date", item['exam_date']),
+            _buildDetailRow(Icons.location_on, "Hall", item['exam_hall']),
+            _buildDetailRow(Icons.meeting_room, "Room", item['room_no']),
+            _buildDetailRow(
+              Icons.confirmation_number,
+              "Seat",
+              item['seat_number'],
             ),
-            Text(
-              "Hall: ${item['exam_hall'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-            Text(
-              "Room: ${item['room_no'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-            Text(
-              "Seat: ${item['seat_number'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-            Text(
-              "Department: ${item['department'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-            Text(
-              "Semester: ${item['semester'] ?? '-'}",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
+            _buildDetailRow(Icons.school, "Department", item['department']),
+            _buildDetailRow(Icons.layers, "Semester", item['semester']),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.deepPurple.shade300),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+          Expanded(
+            child: Text(
+              value?.toString() ?? 'N/A',
+              style: GoogleFonts.poppins(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -145,7 +158,7 @@ class _SeatingArrangementPageState extends State<SeatingArrangementPage> {
               child: Text(
                 errorMessage.isNotEmpty ? errorMessage : "No data available",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
             )
           : ListView.builder(
