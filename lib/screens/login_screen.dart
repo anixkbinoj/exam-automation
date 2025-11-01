@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _selectedRole = 'student';
   bool _isLoading = false;
 
-  final String baseUrl = "http://10.3.2.145/exam_automation/login.php";
+  final String baseUrl = "http://10.36.154.208/exam_automation/login.php";
 
   Future<void> loginUser() async {
     setState(() => _isLoading = true);
@@ -29,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final role = _selectedRole;
 
     if (id.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter ID and password')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please enter ID and password')));
       setState(() => _isLoading = false);
       return;
     }
@@ -42,8 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
         body: {'id': id, 'password': password, 'role': role},
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        dynamic data;
+        try {
+          data = jsonDecode(response.body);
+        } catch (e) {
+          throw Exception("Invalid JSON: ${response.body}");
+        }
 
         if (data['status'] == 'success') {
           ScaffoldMessenger.of(context)
@@ -71,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => FacultyDashboard(
-                  facultyId: int.parse(userData['id'].toString()),
+                  facultyId: int.parse(userData['faculty_id'].toString()),
                   facultyName: userData['name'],
                 ),
               ),
@@ -79,18 +84,19 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         } else {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(data['message'])));
+              .showSnackBar(SnackBar(content: Text(data['message'] ?? 'Login failed')));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Server Error: ${response.statusCode}')));
+          SnackBar(content: Text('Server Error: ${response.statusCode}')),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override

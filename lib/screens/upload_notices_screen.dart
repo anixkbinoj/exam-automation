@@ -22,7 +22,7 @@ class _UploadNoticesScreenState extends State<UploadNoticesScreen> {
   String? fileName;
   bool isLoading = false;
 
-  final String apiUrl = "http://10.3.2.145/exam_automation/upload_notice_pdf.php";
+  final String apiUrl = "http://10.3.1.3/exam_automation/upload_notice_pdf.php";
 
   Future<void> pickPDF() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(

@@ -16,7 +16,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
   List notices = [];
   bool isLoading = true;
 
-  final String apiUrl = "http://10.3.2.145/exam_automation/get_notices.php";
+  final String apiUrl = "http://10.36.154.208/exam_automation/get_notices.php";
 
   @override
   void initState() {
