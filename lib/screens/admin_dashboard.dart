@@ -1,159 +1,294 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/dashboard_card.dart';
+
 import 'upload_seating_screen.dart';
 import 'allot_teacher_screen.dart';
 import 'upload_notices_screen.dart';
-import 'upload_timetable_screen.dart'; // Import the new screen
+import 'upload_timetable_screen.dart';
 import 'view_reports_screen.dart';
 import 'login_screen.dart';
 import 'add_student_screen.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
   @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard>
+    with TickerProviderStateMixin {
+  late AnimationController _orbitController;
+  late AnimationController _bgController;
+
+  final List<Map<String, dynamic>> actions = [
+    {
+      'icon': Icons.upload_file,
+      'label': 'Seating',
+      'color': Colors.blueAccent,
+      'page': const UploadSeatingScreen(),
+    },
+    {
+      'icon': Icons.assignment_ind,
+      'label': 'Duties',
+      'color': Colors.purpleAccent,
+      'page': const AllotTeacherScreen(),
+    },
+    {
+      'icon': Icons.notifications_active,
+      'label': 'Notices',
+      'color': Colors.orangeAccent,
+      'page': const UploadNoticesScreen(),
+    },
+    {
+      'icon': Icons.table_chart,
+      'label': 'Timetable',
+      'color': Colors.greenAccent,
+      'page': const UploadTimeTableScreen(),
+    },
+    {
+      'icon': Icons.person_add,
+      'label': 'Students',
+      'color': Colors.pinkAccent,
+      'page': const AddStudentScreen(),
+    },
+    {
+      'icon': Icons.bar_chart,
+      'label': 'Reports',
+      'color': Colors.cyanAccent,
+      'page': const ViewReportsScreen(),
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _orbitController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _orbitController.dispose();
+    _bgController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF1E293B),
         title: Text(
           "Admin Dashboard",
           style: GoogleFonts.poppins(
-            fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    (Route<dynamic> route) => false,
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
               );
             },
           ),
-          const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Welcome, Admin 👋",
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF334155),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Manage exams, teacher duties, and notices from one place.",
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 30),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              physics: const NeverScrollableScrollPhysics(),
+      body: Stack(
+        children: [
+          // Layer 1: Animated Background
+          AnimatedBuilder(
+            animation: _bgController,
+            builder: (context, _) {
+              return Container(
+                width: size.width,
+                height: size.height,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(
+                      sin(_bgController.value * 2 * pi),
+                      cos(_bgController.value * 2 * pi),
+                    ),
+                    radius: 1.5,
+                    colors: const [
+                      Color(0xFF0F2027),
+                      Color(0xFF203A43),
+                      Color(0xFF2C5364),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          // Layer 2: Foreground Content
+          // Use a SizedBox to make the Stack fill the screen, allowing Positioned to work correctly.
+          SizedBox(
+            width: size.width,
+            height: size.height,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
-                DashboardCard(
-                  title: "Upload Seating Excel",
-                  icon: Icons.upload_file,
-                  color: const Color(0xFF2563EB),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UploadSeatingScreen(),
+                // Center Circle
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 20,
+                        spreadRadius: 5,
                       ),
-                    );
-                  },
-                ),
-                DashboardCard(
-                  title: "Allot Teacher Duties",
-                  icon: Icons.assignment_ind,
-                  color: const Color(0xFF10B981),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AllotTeacherScreen(),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      "ADMIN",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.blueAccent.withOpacity(0.6),
+                            blurRadius: 10,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-                DashboardCard(
-                  title: "Upload Notices",
-                  icon: Icons.notifications_active,
-                  color: const Color(0xFFF59E0B),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UploadNoticesScreen(),
-                      ),
-                    );
-                  },
-                ),
-                DashboardCard(
-                  title: "View Reports",
-                  icon: Icons.bar_chart,
-                  color: const Color(0xFF8B5CF6),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ViewReportsScreen(),
-                      ),
-                    );
-                  },
-                ),
-                DashboardCard(
-                  title: "Upload Time Table",
-                  icon: Icons.table_chart,
-                  color: const Color(0xFFEF4444),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UploadTimeTableScreen(),
-                      ),
-                    );
-                  },
-                ),
-                DashboardCard(
-                  title: "Add Students",
-                  icon: Icons.person_add,
-                  color: const Color(0xFF3B82F6),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddStudentScreen(),
-                      ),
-                    );
-                  },
-                ),
+
+                // Orbit Buttons
+                ...List.generate(actions.length, (i) {
+                  return AnimatedBuilder(
+                    animation: _orbitController,
+                    builder: (context, _) {
+                      final angle =
+                          (i / actions.length) * 2 * pi +
+                          _orbitController.value * 2 * pi;
+                      final radius = 180.0;
+                      final scale = 0.9 + 0.2 * (0.5 + 0.5 * sin(angle));
+
+                      // Use Positioned to correctly handle layout and hit-testing in a Stack.
+                      // We calculate left/top from the center of the Stack.
+                      // The button's own size (120x120) is used to center it on the calculated point.
+                      return Positioned(
+                        left: (size.width / 2) + (cos(angle) * radius) - 60,
+                        top:
+                            (size.height / 2) +
+                            (sin(angle) * radius * 0.6) -
+                            60,
+                        child: Transform.scale(
+                          scale: scale,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => actions[i]['page'],
+                                ),
+                              );
+                            },
+                            child: _orbitButton(
+                              icon: actions[i]['icon'],
+                              color: actions[i]['color'],
+                              label: actions[i]['label'],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
               ],
             ),
-            const SizedBox(height: 30),
-            Center(
-              child: Text(
-                "Exam Hall Automation System",
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey[600],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _orbitButton({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: 100,
+        height: 100,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 70,
+              width: 70,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.7),
+                    blurRadius: 25,
+                    spreadRadius: 2,
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.2),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+                gradient: RadialGradient(
+                  colors: [
+                    color.withOpacity(0.8),
+                    color.withOpacity(0.6),
+                    Colors.white.withOpacity(0.1),
+                  ],
+                  center: const Alignment(-0.2, -0.2),
+                  radius: 0.8,
                 ),
+              ),
+              child: Icon(icon, color: Colors.white, size: 32),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 5,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
             ),
           ],
