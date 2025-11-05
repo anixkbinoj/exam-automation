@@ -1,10 +1,10 @@
 class ApiConfig {
   // Use '10.0.2.2' for Android Emulator, 'localhost' for web/desktop,
   // or your machine's network IP for a physical device.
-  static const String _baseUrl = "http://192.168.1.34/exam_automation";
+  static const String _baseUrl = "https://mbccet.in/cms/exam_automation";
 
   // --- Authentication ---
-  static const String login = "$_baseUrl/login.php";
+  static const String login = "$_baseUrl/loginscreen.php";
   static const String allotTeacher = "$_baseUrl/allot_teacher.php";
 
   // --- Student ---
