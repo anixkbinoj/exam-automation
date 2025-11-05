@@ -1,318 +1,225 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'admin_dashboard.dart';
 import 'student_dashboard.dart';
 import 'faculty_dashboard.dart';
-import '../config/api_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  bool _obscurePassword = true;
+  String _selectedRole = 'student';
   bool _isLoading = false;
-  String _selectedRole = "Admin"; // Default role
 
-  final List<String> roles = ["Admin", "Faculty", "Student"];
+  final String baseUrl = "https://mbccet.in/cms/exam_automation/loginscreen.php";
 
-  Future<void> _loginUser() async {
-    if (_idController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showSnackBar("Please enter ID and password.");
+  Future<void> loginUser() async {
+    setState(() => _isLoading = true);
+
+    final id = _idController.text.trim();
+    final password = _passwordController.text.trim();
+    final role = _selectedRole;
+
+    if (id.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please enter ID and password')));
+      setState(() => _isLoading = false);
       return;
     }
 
-    setState(() => _isLoading = true);
-
     try {
       final response = await http.post(
-        Uri.parse(ApiConfig.login),
-        body: {
-          'id': _idController.text.trim(),
-          'password': _passwordController.text.trim(),
-          'role': _selectedRole.toLowerCase(),
-        },
+        Uri.parse(baseUrl),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'id': id, 'password': password, 'role': role},
       );
 
-      if (!mounted) return;
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        dynamic data;
+        try {
+          data = jsonDecode(response.body);
+        } catch (e) {
+          throw Exception("Invalid JSON: ${response.body}");
+        }
 
-      final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Login Successful!')));
 
-      if (data['status'] == 'success') {
-        _showSnackBar("Login Successful!");
-        final userData = data['data'];
+          final userData = data['data'];
 
-        if (_selectedRole == "Admin") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminDashboard()),
-          );
-        } else if (_selectedRole == "Student") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => StudentDashboard(
-                registerNumber: userData['register_number'],
-                admissionNumber: userData['admission_number'] ?? '',
+          if (role == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            );
+          } else if (role == 'student') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StudentDashboard(
+                  registerNumber: userData['register_number'],
+                  admissionNumber: userData['admission_number'] ?? '',
+                ),
               ),
-            ),
-          );
-        } else if (_selectedRole == "Faculty") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => FacultyDashboard(
-                facultyId: int.parse(userData['id'].toString()),
-                facultyName: userData['name'],
+            );
+          } else if (role == 'faculty') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FacultyDashboard(
+                  facultyId: int.parse(userData['faculty_id'].toString()),
+                  facultyName: userData['name'],
+                ),
               ),
-            ),
-          );
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(data['message'] ?? 'Login failed')));
         }
       } else {
-        _showSnackBar(data['message'] ?? "Login failed. Please try again.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Server Error: ${response.statusCode}')),
+        );
       }
     } catch (e) {
-      if (!mounted) return;
-      _showSnackBar("An error occurred. Please check your connection.");
-      debugPrint("Login Error: $e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final Color lilac1 = const Color(0xFFE6CCFF);
+    final Color lilac2 = const Color(0xFFB8A2F2);
+    final Color lilacDark = const Color(0xFF7A5FFF);
 
     return Scaffold(
       body: Container(
-        width: size.width,
-        height: size.height,
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(-0.2, -0.2),
-            radius: 1.2,
-            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [lilac1, lilac2],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "LOGIN",
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.blueAccent.withOpacity(0.7),
-                        blurRadius: 10,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Role Selection
-                _buildRoleSelector(),
-
-                const SizedBox(height: 30),
-
-                // Username Field
-                _buildTextField(
-                  controller: _idController,
-                  hintText: "ID / Username / Email",
-                  icon: Icons.person,
-                  obscure: false,
-                ),
-                const SizedBox(height: 20),
-
-                // Password Field
-                _buildTextField(
-                  controller: _passwordController,
-                  hintText: "Password",
-                  icon: Icons.lock,
-                  obscure: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Login Button
-                GestureDetector(
-                  onTap: _isLoading ? null : _loginUser,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      gradient: LinearGradient(
-                        colors: [Colors.blueAccent, Colors.cyanAccent],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.6),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                        BoxShadow(
-                          color: Colors.cyanAccent.withOpacity(0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              "LOGIN AS $_selectedRole",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Role Selector Widget
-  Widget _buildRoleSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: roles.map((role) {
-          bool isSelected = _selectedRole == role;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedRole = role;
-              });
-            },
+            padding: const EdgeInsets.all(24.0),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.blueAccent.withOpacity(0.8)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.6),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ]
-                    : [],
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  )
+                ],
               ),
-              child: Text(
-                role,
-                style: GoogleFonts.poppins(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.school, size: 64, color: Color(0xFF7A5FFF)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Exam Automation Login',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4A148C),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Role Selector
+                  DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    items: const [
+                      DropdownMenuItem(value: 'student', child: Text('Student')),
+                      DropdownMenuItem(value: 'faculty', child: Text('Faculty')),
+                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    ],
+                    onChanged: (value) => setState(() => _selectedRole = value!),
+                    decoration: InputDecoration(
+                      labelText: 'Select Role',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ID Field
+                  TextField(
+                    controller: _idController,
+                    decoration: InputDecoration(
+                      labelText: _selectedRole == 'faculty'
+                          ? 'Faculty Name'
+                          : 'Register / Admission / Username',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Password Field
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Login Button
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                    onPressed: loginUser,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: lilacDark,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 6,
+                      shadowColor: lilacDark.withOpacity(0.4),
+                    ),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData icon,
-    bool obscure = false,
-    Widget? suffixIcon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
           ),
-          BoxShadow(
-            color: Colors.blueAccent.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        style: const TextStyle(color: Colors.white),
-        cursorColor: Colors.cyanAccent,
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white70),
-          suffixIcon: suffixIcon,
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20),
         ),
       ),
     );

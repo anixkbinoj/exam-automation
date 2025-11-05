@@ -4,17 +4,18 @@ class ApiConfig {
   static const String _baseUrl = "https://mbccet.in/cms/exam_automation";
 
   // --- Authentication ---
-  static const String login = "$_baseUrl/loginscreen.php";
+  static const String login = "$_baseUrl/login.php";
   static const String allotTeacher = "$_baseUrl/allot_teacher.php";
 
   // --- Student ---
   static const String fetchStudentDetails =
       "$_baseUrl/fetch_student_details.php";
   static const String getSeating = "$_baseUrl/get_seating.php";
+  static const String fetchFacultyDetails = "$_baseUrl/fetch_faculty.php";
+  static const String viewFaculty = "$_baseUrl/view_faculty.php";
 
   // --- Admin ---
   static const String uploadSeatingExcel = "$_baseUrl/upload_seating_excel.php";
-  static const String uploadNoticePdf = "$_baseUrl/upload_notice_pdf.php";
   static const String addStudent = "$_baseUrl/add_student.php";
   // Note: The following endpoints were pointing to a different IP (10.3.2.145).
   // They have been consolidated to the base URL for consistency.

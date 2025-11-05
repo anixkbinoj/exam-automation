@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
-import '../config/api_config.dart';
 
 class ViewNoticesScreen extends StatefulWidget {
   final List<dynamic>? notices; // optional parameter
@@ -17,6 +16,8 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
   List notices = [];
   bool isLoading = true;
 
+  final String apiUrl = "https://mbccet.in/cms/exam_automation/get_notices.php";
+
   @override
   void initState() {
     super.initState();
@@ -30,7 +31,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
 
   Future<void> fetchNotices() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.getNotices));
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -39,15 +40,14 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
         });
       } else {
         setState(() => isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Failed to load notices")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to load notices")),
+        );
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -56,9 +56,8 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Could not open PDF")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Could not open PDF")));
     }
   }
 
@@ -95,85 +94,78 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
               Expanded(
                 child: isLoading
                     ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.deepPurple,
-                        ),
-                      )
+                    child:
+                    CircularProgressIndicator(color: Colors.deepPurple))
                     : notices.isEmpty
                     ? const Center(
-                        child: Text(
-                          "No notices available",
-                          style: TextStyle(
+                  child: Text(
+                    "No notices available",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Color(0xFF6A1B9A),
+                    ),
+                  ),
+                )
+                    : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: notices.length,
+                  itemBuilder: (context, index) {
+                    final notice = notices[index];
+                    return Card(
+                      color: Colors.white.withOpacity(0.95),
+                      elevation: 6,
+                      shadowColor: Colors.deepPurple.withOpacity(0.2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      margin:
+                      const EdgeInsets.symmetric(vertical: 10),
+                      child: ListTile(
+                        leading: const Icon(Icons.picture_as_pdf,
+                            color: Colors.redAccent, size: 30),
+                        title: Text(
+                          notice['title'] ?? "Untitled Notice",
+                          style: const TextStyle(
                             fontSize: 18,
+                            fontWeight: FontWeight.bold,
                             color: Color(0xFF6A1B9A),
                           ),
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: notices.length,
-                        itemBuilder: (context, index) {
-                          final notice = notices[index];
-                          return Card(
-                            color: Colors.white.withOpacity(0.95),
-                            elevation: 6,
-                            shadowColor: Colors.deepPurple.withOpacity(0.2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            child: ListTile(
-                              leading: const Icon(
-                                Icons.picture_as_pdf,
-                                color: Colors.redAccent,
-                                size: 30,
-                              ),
-                              title: Text(
-                                notice['title'] ?? "Untitled Notice",
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6A1B9A),
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (notice['description'] != null &&
-                                      notice['description']
-                                          .toString()
-                                          .isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        notice['description'],
-                                        style: const TextStyle(
-                                          color: Colors.black54,
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    "Uploaded: ${notice['created_at'] ?? ''}",
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.deepPurple,
-                                    ),
+                        subtitle: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            if (notice['description'] != null &&
+                                notice['description'].toString().isNotEmpty)
+                              Padding(
+                                padding:
+                                const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  notice['description'],
+                                  style: const TextStyle(
+                                    color: Colors.black54,
                                   ),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.download_rounded,
-                                  color: Color(0xFF7E57C2),
-                                  size: 28,
                                 ),
-                                onPressed: () => openPDF(notice['file_path']),
                               ),
+                            const SizedBox(height: 5),
+                            Text(
+                              "Uploaded: ${notice['created_at'] ?? ''}",
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.deepPurple),
                             ),
-                          );
-                        },
+                          ],
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.download_rounded,
+                              color: Color(0xFF7E57C2), size: 28),
+                          onPressed: () =>
+                              openPDF(notice['file_path']),
+                        ),
                       ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
