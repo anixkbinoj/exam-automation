@@ -15,7 +15,7 @@ class _AllotTeacherScreenState extends State<AllotTeacherScreen> {
   final TextEditingController subjectController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
 
-  final String apiUrl = "http://10.36.154.208/exam_automation/allot_teacher.php";
+  final String apiUrl = "https://mbccet.in/cms/exam_automation/allot_teacher.php";
 
   Future<void> allotDuty() async {
     if (emailController.text.isEmpty ||

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'seating_arrangement_screen.dart';
 import 'exam_timetable_screen.dart';
 import 'view_notices_screen.dart';
+import 'view_faculty_screen.dart';
 import 'login_screen.dart';
 import '../config/api_config.dart';
 
@@ -127,21 +128,9 @@ class _StudentDashboardState extends State<StudentDashboard>
             builder: (context, child) {
               final t = _bgController.value;
               final colors = [
-                Color.lerp(
-                  const Color(0xFF8E2DE2),
-                  const Color(0xFF4A00E0),
-                  t,
-                )!,
-                Color.lerp(
-                  const Color(0xFF240046),
-                  const Color(0xFF5A189A),
-                  1 - t,
-                )!,
-                Color.lerp(
-                  const Color(0xFF3C096C),
-                  const Color(0xFF9D4EDD),
-                  t,
-                )!,
+                Color.lerp(const Color(0xFF8E2DE2), const Color(0xFF4A00E0), t)!,
+                Color.lerp(const Color(0xFF240046), const Color(0xFF5A189A), 1 - t)!,
+                Color.lerp(const Color(0xFF3C096C), const Color(0xFF9D4EDD), t)!,
               ];
               return Container(
                 decoration: BoxDecoration(
@@ -156,15 +145,14 @@ class _StudentDashboardState extends State<StudentDashboard>
           ),
 
           // Floating glowing particles
-          ...List.generate(50, (index) {
+          ...List.generate(45, (index) {
             final rand = Random(index);
             final dx = rand.nextDouble() * size.width;
             final dy =
-                (rand.nextDouble() * size.height +
-                    (_bgController.value * size.height)) %
-                size.height;
+                (rand.nextDouble() * size.height + (_bgController.value * size.height)) %
+                    size.height;
             final radius = rand.nextDouble() * 2 + 1;
-            final opacity = 0.1 + rand.nextDouble() * 0.3;
+            final opacity = 0.15 + rand.nextDouble() * 0.25;
             return Positioned(
               left: dx,
               top: dy,
@@ -179,17 +167,17 @@ class _StudentDashboardState extends State<StudentDashboard>
             );
           }),
 
-          // Main dashboard
+          // Main dashboard content
           isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
+            child: CircularProgressIndicator(color: Colors.white),
+          )
               : _errorMessage.isNotEmpty
               ? _buildErrorView()
               : FadeTransition(
-                  opacity: _fadeController,
-                  child: _buildDashboardContent(),
-                ),
+            opacity: _fadeController,
+            child: _buildDashboardContent(),
+          ),
         ],
       ),
     );
@@ -233,7 +221,7 @@ class _StudentDashboardState extends State<StudentDashboard>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Welcome, ${studentData?['name'] ?? 'Student'}",
+                  "Welcome, ${studentData?['name'] ?? 'Student'} 👋",
                   style: GoogleFonts.poppins(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -346,6 +334,11 @@ class _StudentDashboardState extends State<StudentDashboard>
         'text': '📢 View Notices',
         'page': const ViewNoticesScreen(),
         'gradient': [Colors.tealAccent, Colors.blueAccent],
+      },
+      {
+        'text': '👨‍🏫 View Teachers',
+        'page': const ViewFacultyScreen(),
+        'gradient': [Colors.purpleAccent, Colors.deepPurpleAccent],
       },
     ];
 

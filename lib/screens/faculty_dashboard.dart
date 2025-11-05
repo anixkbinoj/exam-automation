@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -20,16 +21,46 @@ class FacultyDashboard extends StatefulWidget {
   State<FacultyDashboard> createState() => _FacultyDashboardState();
 }
 
-class _FacultyDashboardState extends State<FacultyDashboard> {
+class _FacultyDashboardState extends State<FacultyDashboard> with TickerProviderStateMixin {
   List<dynamic> duties = [];
   List<dynamic> notices = [];
   String _errorMessage = '';
   bool _isLoading = true;
 
+  late AnimationController _bgController;
+  late AnimationController _fadeController;
+  late AnimationController _buttonPulseController;
+
   @override
   void initState() {
     super.initState();
+
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat(reverse: true);
+
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _buttonPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+      lowerBound: 0.95,
+      upperBound: 1.05,
+    )..repeat(reverse: true);
+
     fetchDashboardData();
+  }
+
+  @override
+  void dispose() {
+    _bgController.dispose();
+    _fadeController.dispose();
+    _buttonPulseController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchDashboardData() async {
@@ -90,19 +121,21 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(message,
-              style: const TextStyle(
-                  color: Colors.red, fontSize: 16, fontWeight: FontWeight.w500)),
+          const Icon(Icons.error_outline, color: Colors.white, size: 60),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: fetchDashboardData,
             icon: const Icon(Icons.refresh),
             label: const Text("Retry"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.deepPurple,
             ),
           ),
         ],
@@ -110,99 +143,207 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     );
   }
 
-  // 🔹 Dashboard layout
+  Widget _buildGlassCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 25,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.05),
+            Colors.white.withOpacity(0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildDashboardContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "👋 Welcome, ${widget.facultyName}",
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Here's your dashboard 📋",
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildGlassCard(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.assignment_outlined, color: Colors.blueAccent),
+                  title: Text("Total Duties: ${duties.length}", style: const TextStyle(color: Colors.white)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.notifications_active, color: Colors.orangeAccent),
+                  title: Text("Total Notices: ${notices.length}", style: const TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 30),
+          _buildActionButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    final buttons = [
+      {
+        'text': '📋 View Assigned Duties',
+        'page': FacultyDutiesPage(duties: duties),
+        'gradient': [Colors.cyanAccent, Colors.indigoAccent],
+      },
+      {
+        'text': '📢 View Notices',
+        'page': FacultyNoticesPage(notices: notices),
+        'gradient': [Colors.orangeAccent, Colors.pinkAccent],
+      },
+    ];
+
+    return Column(
+      children: buttons.map((btn) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: AnimatedBuilder(
+            animation: _buttonPulseController,
+            builder: (context, child) => Transform.scale(
+              scale: _buttonPulseController.value,
+              child: child,
+            ),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => btn['page'] as Widget),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: btn['gradient'] as List<Color>),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    btn['text'] as String,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Faculty Dashboard"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-          ? _buildError(_errorMessage)
-          : RefreshIndicator(
-        onRefresh: fetchDashboardData,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            Text(
-              "👋 Welcome, ${widget.facultyName}",
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🔹 Buttons to navigate
-            ElevatedButton.icon(
-              icon: const Icon(Icons.assignment),
-              label: const Text("View Assigned Duties"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FacultyDutiesPage(duties: duties),
+      body: Stack(
+        children: [
+          // Animated gradient background
+          AnimatedBuilder(
+            animation: _bgController,
+            builder: (context, child) {
+              final t = _bgController.value;
+              final colors = [
+                Color.lerp(Colors.blueAccent, Colors.indigo, t)!,
+                Color.lerp(Colors.deepPurple, Colors.purpleAccent, 1 - t)!,
+                Color.lerp(Colors.purple, Colors.pinkAccent, t)!,
+              ];
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: colors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
+                ),
+              );
+            },
+          ),
 
-            ElevatedButton.icon(
-              icon: const Icon(Icons.notifications),
-              label: const Text("View Notices"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orangeAccent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          // Floating glowing particles
+          ...List.generate(45, (index) {
+            final rand = Random(index);
+            final dx = rand.nextDouble() * size.width;
+            final dy = (rand.nextDouble() * size.height + (_bgController.value * size.height)) % size.height;
+            final radius = rand.nextDouble() * 2 + 1;
+            final opacity = 0.15 + rand.nextDouble() * 0.25;
+            return Positioned(
+              left: dx,
+              top: dy,
+              child: Container(
+                width: radius,
+                height: radius,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(opacity),
+                  shape: BoxShape.circle,
+                ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FacultyNoticesPage(notices: notices),
-                  ),
-                );
-              },
-            ),
+            );
+          }),
 
-            const SizedBox(height: 30),
-
-            // Summary counts
-            Card(
-              elevation: 4,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: ListTile(
-                leading: const Icon(Icons.assignment_outlined,
-                    color: Colors.blueAccent),
-                title: Text("Total Duties: ${duties.length}"),
-              ),
-            ),
-            Card(
-              elevation: 4,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: ListTile(
-                leading: const Icon(Icons.notifications_active,
-                    color: Colors.orangeAccent),
-                title: Text("Total Notices: ${notices.length}"),
-              ),
-            ),
-          ],
-        ),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.white))
+              : _errorMessage.isNotEmpty
+              ? _buildError(_errorMessage)
+              : FadeTransition(opacity: _fadeController..forward(), child: _buildDashboardContent()),
+        ],
       ),
     );
   }

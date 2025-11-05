@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _selectedRole = 'student';
   bool _isLoading = false;
 
-  final String baseUrl = "http://10.36.154.208/exam_automation/login.php";
+  final String baseUrl = "https://mbccet.in/cms/exam_automation/loginscreen.php";
 
   Future<void> loginUser() async {
     setState(() => _isLoading = true);
