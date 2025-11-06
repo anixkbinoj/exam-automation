@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen>
               context,
               MaterialPageRoute(
                 builder: (_) => FacultyDashboard(
-                  facultyId: int.parse(userData['id'].toString()),
+                  facultyId: int.parse(userData['faculty_id'].toString()),
                   facultyName: userData['name'],
                 ),
               ),
