@@ -41,6 +41,7 @@ dependencies:
   lucide_icons: ^0.257.0
   animate_do: ^3.3.4
   video_player: ^2.9.1
+  shared_preferences: ^2.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

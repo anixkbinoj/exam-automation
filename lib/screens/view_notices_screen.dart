@@ -30,14 +30,28 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
   }
 
   Future<void> fetchNotices() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          notices = data;
-          isLoading = false;
-        });
+        final Map<String, dynamic> data = jsonDecode(response.body);
+
+        if (data['status'] == 'success' && data['data'] != null) {
+          setState(() {
+            notices = data['data'];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            notices = [];
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? "No notices found.")),
+          );
+        }
       } else {
         setState(() => isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,7 +89,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 💜 Header
+              // Header
               Container(
                 padding: const EdgeInsets.all(20),
                 width: double.infinity,
@@ -89,13 +103,11 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
                   ),
                 ),
               ),
-
-              // 🌀 Body
+              // Body
               Expanded(
                 child: isLoading
                     ? const Center(
-                    child:
-                    CircularProgressIndicator(color: Colors.deepPurple))
+                    child: CircularProgressIndicator(color: Colors.deepPurple))
                     : notices.isEmpty
                     ? const Center(
                   child: Text(
@@ -118,8 +130,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      margin:
-                      const EdgeInsets.symmetric(vertical: 10),
+                      margin: const EdgeInsets.symmetric(vertical: 10),
                       child: ListTile(
                         leading: const Icon(Icons.picture_as_pdf,
                             color: Colors.redAccent, size: 30),
@@ -132,14 +143,12 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
                           ),
                         ),
                         subtitle: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (notice['description'] != null &&
                                 notice['description'].toString().isNotEmpty)
                               Padding(
-                                padding:
-                                const EdgeInsets.only(top: 4.0),
+                                padding: const EdgeInsets.only(top: 4.0),
                                 child: Text(
                                   notice['description'],
                                   style: const TextStyle(
@@ -159,8 +168,7 @@ class _ViewNoticesScreenState extends State<ViewNoticesScreen> {
                         trailing: IconButton(
                           icon: const Icon(Icons.download_rounded,
                               color: Color(0xFF7E57C2), size: 28),
-                          onPressed: () =>
-                              openPDF(notice['file_path']),
+                          onPressed: () => openPDF(notice['file_path']),
                         ),
                       ),
                     );
