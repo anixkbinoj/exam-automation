@@ -2,7 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../config/api_config.dart';
 import 'faculty_duties_page.dart';
 import 'faculty_notices_page.dart';
@@ -21,7 +23,8 @@ class FacultyDashboard extends StatefulWidget {
   State<FacultyDashboard> createState() => _FacultyDashboardState();
 }
 
-class _FacultyDashboardState extends State<FacultyDashboard> with TickerProviderStateMixin {
+class _FacultyDashboardState extends State<FacultyDashboard>
+    with TickerProviderStateMixin {
   List<dynamic> duties = [];
   List<dynamic> notices = [];
   String _errorMessage = '';
@@ -70,215 +73,60 @@ class _FacultyDashboardState extends State<FacultyDashboard> with TickerProvider
     });
 
     try {
-      debugPrint("📤 Sending faculty_id: ${widget.facultyId}");
-
       final dutiesResponse = await http.post(
         Uri.parse(ApiConfig.fetchAssignedDuties),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'faculty_id': widget.facultyId.toString()},
       );
 
-      final noticesResponse = await http.get(Uri.parse(ApiConfig.getNotices));
+      final noticesResponse =
+      await http.get(Uri.parse(ApiConfig.getNotices));
 
-      debugPrint("✅ Duties Response: ${dutiesResponse.body}");
-      debugPrint("✅ Notices Response: ${noticesResponse.body}");
-
-      if (!mounted) return;
-
-      final dutiesData = jsonDecode(dutiesResponse.body);
-      final noticesData = jsonDecode(noticesResponse.body);
+      dynamic dutiesData = dutiesResponse.body.isNotEmpty
+          ? jsonDecode(dutiesResponse.body)
+          : {};
+      dynamic noticesData = noticesResponse.body.isNotEmpty
+          ? jsonDecode(noticesResponse.body)
+          : {};
 
       setState(() {
-        if (dutiesData['status'] == 'success') {
-          duties = dutiesData['data'];
-        } else {
-          duties = [];
-        }
+        duties = (dutiesData is Map &&
+            dutiesData['status'] == 'success' &&
+            dutiesData['data'] is List)
+            ? dutiesData['data']
+            : [];
 
-        notices = noticesData is List ? noticesData : [];
+        notices = (noticesData is Map && noticesData['status'] == 'success')
+            ? noticesData['data']
+            : [];
+
+        _fadeController.forward();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = "⚠️ Error fetching data: $e";
+        _errorMessage = "⚠️ $e";
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _openFile(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      debugPrint("Could not open file: $url");
-    }
-  }
-
-  Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.white, size: 60),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: fetchDashboardData,
-            icon: const Icon(Icons.refresh),
-            label: const Text("Retry"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.deepPurple,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlassCard({required Widget child}) {
+  Widget _glassCard({required Widget child}) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(color: Colors.white.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 25,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.05),
-            Colors.white.withOpacity(0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
       ),
       child: child,
     );
   }
 
-  Widget _buildDashboardContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildGlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "👋 Welcome, ${widget.facultyName}",
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Here's your dashboard 📋",
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildGlassCard(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.assignment_outlined, color: Colors.blueAccent),
-                  title: Text("Total Duties: ${duties.length}", style: const TextStyle(color: Colors.white)),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.notifications_active, color: Colors.orangeAccent),
-                  title: Text("Total Notices: ${notices.length}", style: const TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
-          _buildActionButtons(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    final buttons = [
-      {
-        'text': '📋 View Assigned Duties',
-        'page': FacultyDutiesPage(duties: duties),
-        'gradient': [Colors.cyanAccent, Colors.indigoAccent],
-      },
-      {
-        'text': '📢 View Notices',
-        'page': FacultyNoticesPage(notices: notices),
-        'gradient': [Colors.orangeAccent, Colors.pinkAccent],
-      },
-    ];
-
-    return Column(
-      children: buttons.map((btn) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: AnimatedBuilder(
-            animation: _buttonPulseController,
-            builder: (context, child) => Transform.scale(
-              scale: _buttonPulseController.value,
-              child: child,
-            ),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => btn['page'] as Widget),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: btn['gradient'] as List<Color>),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    btn['text'] as String,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+  Widget _buildError(String message) {
+    return Center(
+      child: Text(message, style: const TextStyle(color: Colors.white)),
     );
   }
 
@@ -289,21 +137,21 @@ class _FacultyDashboardState extends State<FacultyDashboard> with TickerProvider
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Faculty Dashboard"),
         backgroundColor: Colors.transparent,
+        title: const Text("Faculty Dashboard"),
         elevation: 0,
       ),
       body: Stack(
         children: [
-          // Animated gradient background
+          // Animated background
           AnimatedBuilder(
             animation: _bgController,
             builder: (context, child) {
               final t = _bgController.value;
               final colors = [
-                Color.lerp(Colors.blueAccent, Colors.indigo, t)!,
-                Color.lerp(Colors.deepPurple, Colors.purpleAccent, 1 - t)!,
-                Color.lerp(Colors.purple, Colors.pinkAccent, t)!,
+                Color.lerp(const Color(0xFF8E2DE2), const Color(0xFF4A00E0), t)!,
+                Color.lerp(const Color(0xFF240046), const Color(0xFF5A189A), 1 - t)!,
+                Color.lerp(const Color(0xFF3C096C), const Color(0xFF9D4EDD), t)!,
               ];
               return Container(
                 decoration: BoxDecoration(
@@ -321,7 +169,10 @@ class _FacultyDashboardState extends State<FacultyDashboard> with TickerProvider
           ...List.generate(45, (index) {
             final rand = Random(index);
             final dx = rand.nextDouble() * size.width;
-            final dy = (rand.nextDouble() * size.height + (_bgController.value * size.height)) % size.height;
+            final dy =
+                (rand.nextDouble() * size.height +
+                    (_bgController.value * size.height)) %
+                    size.height;
             final radius = rand.nextDouble() * 2 + 1;
             final opacity = 0.15 + rand.nextDouble() * 0.25;
             return Positioned(
@@ -342,8 +193,116 @@ class _FacultyDashboardState extends State<FacultyDashboard> with TickerProvider
               ? const Center(child: CircularProgressIndicator(color: Colors.white))
               : _errorMessage.isNotEmpty
               ? _buildError(_errorMessage)
-              : FadeTransition(opacity: _fadeController..forward(), child: _buildDashboardContent()),
+              : FadeTransition(
+            opacity: _fadeController,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 90),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _glassCard(
+                    child: Text(
+                      "Welcome, ${widget.facultyName} 👋",
+                      style: GoogleFonts.poppins(
+                        fontSize: 26,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+
+                  // Action Buttons
+                  _actionButton(
+                    text: "📌 View Assigned Duties",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FacultyDutiesPage(duties: duties),
+                      ),
+                    ),
+                    gradient: const [Colors.cyanAccent, Colors.indigoAccent],
+                  ),
+                  _actionButton(
+                    text: "📢 View Notices",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FacultyNoticesPage(notices: notices),
+                      ),
+                    ),
+                    gradient: const [Colors.orangeAccent, Colors.pinkAccent],
+                  ),
+                  const SizedBox(height: 25),
+
+                  // Summary
+                  _glassCard(
+                    child: Column(
+                      children: [
+                        _summaryRow("Total Duties", duties.length.toString()),
+                        _summaryRow("Total Notices", notices.length.toString()),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          )
         ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+          Text(value,
+              style: GoogleFonts.poppins(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required String text,
+    required VoidCallback onTap,
+    required List<Color> gradient,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: AnimatedBuilder(
+        animation: _buttonPulseController,
+        builder: (context, child) => Transform.scale(
+          scale: _buttonPulseController.value,
+          child: child,
+        ),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradient),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Center(
+              child: Text(
+                text,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -23,6 +23,5 @@ class ApiConfig {
   static const String getNotices = "$_baseUrl/get_notices.php";
 
   // --- Faculty ---
-  static const String fetchAssignedDuties =
-      "$_baseUrl/fetch_assigned_duties.php";
+  static const String fetchAssignedDuties = "$_baseUrl/fetch_assigned_duties.php";
 }

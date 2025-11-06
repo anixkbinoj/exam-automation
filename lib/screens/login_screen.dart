@@ -76,12 +76,13 @@ class _LoginScreenState extends State<LoginScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => FacultyDashboard(
-                  facultyId: int.parse(userData['faculty_id'].toString()),
+                  facultyId: int.tryParse(userData['faculty_id'].toString()) ?? 0,
                   facultyName: userData['name'],
                 ),
               ),
             );
           }
+
         } else {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(data['message'] ?? 'Login failed')));
