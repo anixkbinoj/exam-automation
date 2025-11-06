@@ -206,12 +206,24 @@ class _AdminDashboardState extends State<AdminDashboard>
                           scale: scale,
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => actions[i]['page'],
-                                ),
-                              );
+                              final label = actions[i]['label'];
+                              if (label == 'Timetable' || label == 'Reports') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'This feature is coming soon!',
+                                    ),
+                                    backgroundColor: Colors.blueGrey,
+                                  ),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => actions[i]['page'],
+                                  ),
+                                );
+                              }
                             },
                             child: _orbitButton(
                               icon: actions[i]['icon'],
@@ -242,56 +254,59 @@ class _AdminDashboardState extends State<AdminDashboard>
       child: SizedBox(
         width: 100,
         height: 100,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 70,
-              width: 70,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(0.7),
-                    blurRadius: 25,
-                    spreadRadius: 2,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.2),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ],
-                gradient: RadialGradient(
-                  colors: [
-                    color.withOpacity(0.8),
-                    color.withOpacity(0.6),
-                    Colors.white.withOpacity(0.1),
+        child: Opacity(
+          opacity: (label == 'Timetable' || label == 'Reports') ? 0.5 : 1.0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 70,
+                width: 70,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.7),
+                      blurRadius: 25,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.2),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
                   ],
-                  center: const Alignment(-0.2, -0.2),
-                  radius: 0.8,
+                  gradient: RadialGradient(
+                    colors: [
+                      color.withOpacity(0.8),
+                      color.withOpacity(0.6),
+                      Colors.white.withOpacity(0.1),
+                    ],
+                    center: const Alignment(-0.2, -0.2),
+                    radius: 0.8,
+                  ),
+                ),
+                child: Icon(icon, color: Colors.white, size: 32),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 5,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
               ),
-              child: Icon(icon, color: Colors.white, size: 32),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 5,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

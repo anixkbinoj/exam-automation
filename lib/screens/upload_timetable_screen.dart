@@ -45,9 +45,7 @@ class _UploadTimeTableScreenState extends State<UploadTimeTableScreen> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse(
-          ApiConfig.getTimetable,
-        ), // Assuming this is the upload endpoint
+        Uri.parse(ApiConfig.uploadTimetable),
       );
 
       request.files.add(

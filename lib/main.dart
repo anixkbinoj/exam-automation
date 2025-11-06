@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const ExamAutomationApp());
@@ -11,10 +11,10 @@ class ExamAutomationApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Exam Automation System',
+      title: 'ALLOXAM',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const LoginScreen(),
+      home: const SplashScreen(), // 👈 Start from Splash first
     );
   }
 }

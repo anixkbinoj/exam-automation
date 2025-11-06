@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'seating_arrangement_screen.dart';
 import 'exam_timetable_screen.dart';
 import 'view_notices_screen.dart';
@@ -128,9 +127,21 @@ class _StudentDashboardState extends State<StudentDashboard>
             builder: (context, child) {
               final t = _bgController.value;
               final colors = [
-                Color.lerp(const Color(0xFF8E2DE2), const Color(0xFF4A00E0), t)!,
-                Color.lerp(const Color(0xFF240046), const Color(0xFF5A189A), 1 - t)!,
-                Color.lerp(const Color(0xFF3C096C), const Color(0xFF9D4EDD), t)!,
+                Color.lerp(
+                  const Color(0xFF8E2DE2),
+                  const Color(0xFF4A00E0),
+                  t,
+                )!,
+                Color.lerp(
+                  const Color(0xFF240046),
+                  const Color(0xFF5A189A),
+                  1 - t,
+                )!,
+                Color.lerp(
+                  const Color(0xFF3C096C),
+                  const Color(0xFF9D4EDD),
+                  t,
+                )!,
               ];
               return Container(
                 decoration: BoxDecoration(
@@ -149,8 +160,9 @@ class _StudentDashboardState extends State<StudentDashboard>
             final rand = Random(index);
             final dx = rand.nextDouble() * size.width;
             final dy =
-                (rand.nextDouble() * size.height + (_bgController.value * size.height)) %
-                    size.height;
+                (rand.nextDouble() * size.height +
+                    (_bgController.value * size.height)) %
+                size.height;
             final radius = rand.nextDouble() * 2 + 1;
             final opacity = 0.15 + rand.nextDouble() * 0.25;
             return Positioned(
@@ -170,14 +182,14 @@ class _StudentDashboardState extends State<StudentDashboard>
           // Main dashboard content
           isLoading
               ? const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          )
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
               : _errorMessage.isNotEmpty
               ? _buildErrorView()
               : FadeTransition(
-            opacity: _fadeController,
-            child: _buildDashboardContent(),
-          ),
+                  opacity: _fadeController,
+                  child: _buildDashboardContent(),
+                ),
         ],
       ),
     );
@@ -297,7 +309,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -306,9 +318,13 @@ class _StudentDashboardState extends State<StudentDashboard>
               fontWeight: FontWeight.w600,
             ),
           ),
-          Text(
-            value ?? 'N/A',
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 15),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value ?? 'N/A',
+              textAlign: TextAlign.end,
+              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 15),
+            ),
           ),
         ],
       ),
@@ -330,6 +346,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         'page': const ExamTimeTableScreen(),
         'gradient': [Colors.orangeAccent, Colors.pinkAccent],
       },
+      // Note: The 'page' for timetable is now effectively disabled by the onTap logic below.
       {
         'text': '📢 View Notices',
         'page': const ViewNoticesScreen(),
@@ -354,10 +371,20 @@ class _StudentDashboardState extends State<StudentDashboard>
             ),
             child: GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => btn['page'] as Widget),
-                );
+                // If the button is the timetable, show "Coming Soon".
+                if (btn['text'] == '📅 View Exam Timetable') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('This feature is coming soon!'),
+                      backgroundColor: Colors.blueGrey,
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => btn['page'] as Widget),
+                  );
+                }
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(

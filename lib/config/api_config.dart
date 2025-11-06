@@ -4,7 +4,10 @@ class ApiConfig {
   static const String _baseUrl = "https://mbccet.in/cms/exam_automation";
 
   // --- Authentication ---
-  static const String login = "$_baseUrl/login.php";
+  static const verifyEmail = "$_baseUrl/verify_email.php";
+  static const verifyOTP = "$_baseUrl/verify_otp.php";
+  static const resetPassword = "$_baseUrl/reset_password.php";
+  static const String login = "$_baseUrl/loginscreen.php";
   static const String allotTeacher = "$_baseUrl/allot_teacher.php";
 
   // --- Student ---
@@ -17,10 +20,12 @@ class ApiConfig {
   // --- Admin ---
   static const String uploadSeatingExcel = "$_baseUrl/upload_seating_excel.php";
   static const String addStudent = "$_baseUrl/add_student.php";
+  static const String uploadNoticePdf = "$_baseUrl/upload_notice.php";
   // Note: The following endpoints were pointing to a different IP (10.3.2.145).
   // They have been consolidated to the base URL for consistency.
   // Please ensure your server is configured to handle these routes.
   static const String getTimetable = "$_baseUrl/get_timetable.php";
+  static const String uploadTimetable = "$_baseUrl/upload_timetable.php";
   static const String getNotices = "$_baseUrl/get_notices.php";
 
   // --- Faculty ---
